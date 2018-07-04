@@ -204,13 +204,18 @@ ah, randoms g = ((x,g') -> x : randoms g') (random g)
 Person1
 hopefully this type of thing will be easier on my brain eventually
 
-
-Recursion and Lazy Infinite Lists
+## Recursion and Lazy Infinite Lists
 The randoms function is an infinite list. Note carefully:
+```haskell
 randoms g = (\(x,g') -> x : randoms g') (random g)
-This is non-terminating. It takes some variable x and appends the result of randoms g' to it, which itself is the same function, thus creating an infinite list.
-This gives us an example of lazy evaluation. This bit right here (specifically, the use of !! 0 at the end) shows that Haskell is lazily evaluating up to the 0th location of this infinite list:
+```
+This is non-terminating. It takes some variable x and appends the result of `randoms g'` to it, which itself is the same function, thus creating an infinite list.
+
+This gives us an example of lazy evaluation. This bit right here (specifically, the use of `!! 0` at the end) shows that Haskell is lazily evaluating up to the 0th location of this infinite list:
+
+```haskell
 print $ (randoms g :: [Gonger]) !! 0
+```
 
 But is it fair?
 
@@ -237,16 +242,25 @@ $ cat log2 | sort | uniq -c | sort -n -k 1
 2339 Person2
 2372 Person5
 2397 Person1
+
 Looks fair.
 
 There is a monad here.
 
 It's the "do notation" here:
+
+```haskell
 main = do
   ...
-I think it's a monad because the type that is returned from newStdGen is wrapped in an IO type. And we need to do some function chaining or composition or something, with other functions that do not take values wrapped in IO. Not sure yet.
+```
+
+I think it's a monad because the type that is returned from `newStdGen` is wrapped in an `IO` type. And we need to do some function chaining or composition or something, with other functions that do not take values wrapped in `IO`. Not sure yet.
+
 Why the do notation?
-We're doing something with IO. Where does the IO come in?
+
+We're doing something with `IO`. Where does the `IO` come in?
+
+```haskell
 newStdGen :: IO StdGen
 newStdGen = atomicModifyIORef theStdGen split
 atomicModifyIORef, according to Hoogle, "atomically modifies the contents of an 'IORef'." I don't know what this means. What's an IORef? Moving on...
@@ -261,4 +275,6 @@ mkStdRNG o = do
     ct          <- getCPUTime
     (sec, psec) <- getTime
     return (createStdGen (sec * 12345 + psec + ct + o))
+```
+
 Ah, there's the IO (getCPUTime and getTime). I'm not going to look up their definitions.
