@@ -113,6 +113,7 @@ Sometimes (especially when using polymorphic return types) it can't always be po
 merijn
 i.e. print (read "Just 't'")
 :t print
+
 lambdabot
 Show a => a -> IO ()
 aweinstock
@@ -120,84 +121,126 @@ aweinstock
 10:04:39
 lambdabot
 0.0
+
 merijn
 Person1: Since "print" can print any type that is an instance of Show and read returns any type that is an instance of Read, the compiler has a problem
+
 aweinstock
 > 0 :: Int
+
 lambdabot
 0
 mizu_no_oto
 > print (read "Just 't'")
+
 lambdabot
 <IO ()>
+
 merijn
 Person1: There's multiple types that are instances of Show and Read and it can't possibly know which one you meant
+
 aweinstock
 > (read "Just 't'") :: Maybe Char
+
 lambdabot
 Just 't'
+
 Person1
 thanks guys. here is something that appears (to me) to be slightly different in purpose. perhaps i'm wrong. I found it in an fpcomplete post. the line i'm interested in is this one: "print . take 10 $ (randoms g :: Coin)" (from this page: https://www.fpcomplete.com/school/starting-with-haskell/libraries-and-frameworks/randoms). The interesting thing to me is that we are applying "randoms" to a seed `g`, and telling it we want a return type of Coin, where Coin = Heads | Tails deriving (Show, Enum, Bounded)
+
 Person1
 i guess my question is, how do we get from a seed `g`, to one of the options in Coin?
+
 mizu_no_oto
 :t randoms
+
 lambdabot
 (RandomGen g, Random a) => g -> a
+
 maerwald
 Person1: Coin has an instance of Random... but afais you could delay the coin type annotation in that example
+
 merijn
+
 Person1: Coin has to have a Random instance for this to work
+
 Person1: The reason the annotation is there is because if it wasn't you have a similar problem to the Read/Show one
+
 mizu_no_oto
 :t randoms $ mkStdGen 42
+
 lambdabot
 Random a => a
+
 merijn
+
 Person1: i.e. print wants a type that is a Show instance, and randoms returns a type that is a Random instance and there's multiple types that are both Show and Random instances
+
 merijn
 So by annotating you remove the ambiguity by telling GHC "while this CAN produce any random instance, I want you to produce Coins"
+
 mizu_no_oto
 Person1: Basically, it's the exact same issue as with 'show . read'
+
 Person1
 i am starting to get it, slowly
+
 mizu_no_oto
 Person1: typeclasses are interesting because you can be polymorphic on any part of the type, including the return type
+
 Person1
 part of the difficulty for me is that when i'm looking at the instance on the fpcomplete page, i don't see `randoms` directly, but instead see `randomR` and `random` (one of which, i can imagine, calls `randoms`)
+
 mizu_no_oto https://hackage.haskell.org/package/random-1.0.0.2/docs/System-Random.html
+
 mizu_no_oto
 randoms is defined in terms of randoms
 geh. In terms of random
+
 Person1
 ah, randoms g = ((x,g') -> x : randoms g') (random g)
 10:16:12
+
 Person1
 hopefully this type of thing will be easier on my brain eventually
+
+
 Recursion and Lazy Infinite Lists
 The randoms function is an infinite list. Note carefully:
 randoms g = (\(x,g') -> x : randoms g') (random g)
 This is non-terminating. It takes some variable x and appends the result of randoms g' to it, which itself is the same function, thus creating an infinite list.
 This gives us an example of lazy evaluation. This bit right here (specifically, the use of !! 0 at the end) shows that Haskell is lazily evaluating up to the 0th location of this infinite list:
 print $ (randoms g :: [Gonger]) !! 0
+
 But is it fair?
+
 I think so. On two sets of runs:
+
 One night:
+```bash
 $ cat log | sort | uniq -c | sort -n -k 1
+```
+
 1826 Person2
 1868 Person4
 1890 Person1
 1901 Person5
 1914 Person3
-Another night night:
+
+Another night:
+
+```bash
 $ cat log2 | sort | uniq -c | sort -n -k 1
+```
 2291 Person4
 2333 Person3
 2339 Person2
 2372 Person5
 2397 Person1
 Looks fair.
+
 There is a monad here.
+
 It's the "do notation" here:
 main = do
   ...
