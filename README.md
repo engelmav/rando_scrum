@@ -88,20 +88,28 @@ So ``randoms g :: Gonger``. The purpose of this ``:: Gonger`` type annotation is
 
 
 Full transcript of irc chat.
+
 Person1
 hello. quick question. is there a particular name for when one appends the type signature at the end of function application (e.g. not definition, but application). For example, LYAH has an example "read "Just 't'" :: Maybe Char"
+
 merijn
 Person1: They're type annotations
+
 merijn
 Technically type signatures are also just type annotations
+
 Person1
 thanks merijn. so appending a type annotation at the moment of application, does this assist haskell in determining which implementation of a function should be used? (for example, in the case that there are instances of typeclasses with different implementations)
+
 mniip
 technical notice: different instances, implementations do not matter at all
+
 merijn
 Person1: It specifies what type an expression should have (which should be equal to, or a more specific version of all it's possible types). The instance selection can happen based on types, yes.
+
 merijn
 Sometimes (especially when using polymorphic return types) it can't always be possible to decide which instance to pick, so an annotation helps
+
 merijn
 i.e. print (read "Just 't'")
 :t print
